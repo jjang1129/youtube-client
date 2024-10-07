@@ -9,6 +9,7 @@ import { useTheme } from "../contexts/ThemeContext";
 import { GoSun } from "react-icons/go";
 import { MdDarkMode } from "react-icons/md";
 import logoDark from "../assets/logo-dark.svg";
+import { jwtDecode } from "jwt-decode";
 
 const StyledHeader = styled.header`
   position: fixed;
@@ -97,6 +98,19 @@ const Header = ({ onUpload, onSearch }) => {
   const { token, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
+  const [decoded, setDecoed] = useState(null);
+
+  useEffect(() => {
+    if (token != null) {
+      setDecoed(jwtDecode(token));
+      console.log(token);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (decoded != null) localStorage.setItem("id", decoded.id);
+  }, [decoded]);
+
   const [isOpen, setIsOpen] = useState(false);
   const [keyword, setKeyword] = useState("");
   const login = () => {
@@ -115,6 +129,11 @@ const Header = ({ onUpload, onSearch }) => {
   };
   const close = () => {
     setIsOpen(false);
+  };
+
+  const deleted = () => {
+    logout();
+    setDecoed(null);
   };
 
   return (
@@ -144,10 +163,11 @@ const Header = ({ onUpload, onSearch }) => {
               로그인
             </button>
           ) : (
-            <button type="button" onClick={logout}>
+            <button type="button" onClick={deleted}>
               로그아웃
             </button>
           )}
+          {decoded === null ? <p>회원가입하기</p> : <p>{decoded.id}</p>}
           <button type="button" onClick={open}>
             업로드
           </button>
