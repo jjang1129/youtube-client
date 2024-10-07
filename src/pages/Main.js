@@ -1,17 +1,27 @@
 import "../assets/style (1).css";
 import { FaHouseChimney } from "react-icons/fa6";
 import { FaFolder } from "react-icons/fa";
-import { getVideos } from "../api/video";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
+
 const Main = () => {
-  const [videos, setVideos] = useState([]);
-  const videoAPI = async () => {
-    const result = await getVideos();
-    setVideos(result.data);
+  const { videos, setPage } = useOutletContext();
+
+  const scroll = () => {
+    if (
+      window.innerHeight + document.documentElement.scrollTop >=
+      document.documentElement.offsetHeight
+    ) {
+      setPage((page) => page + 1);
+    }
   };
+
   useEffect(() => {
-    videoAPI();
-  }, []);
+    window.addEventListener("scroll", scroll);
+    return () => {
+      window.removeEventListener("scroll", scroll);
+    };
+  }, [setPage]);
 
   return (
     <main>
@@ -56,6 +66,7 @@ const Main = () => {
             </div>
           ))}
         </section>
+        {/* 스크롤이 여기에 도달하면 다음 페이지 올 수 있도록 */}
       </div>
     </main>
   );
