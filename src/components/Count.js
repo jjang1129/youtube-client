@@ -32,11 +32,11 @@ const Count = () => {
   const dispatch = useDispatch(); // 먼저 호출을 한다
 
   // useSelector : 리덕스 스토어에서 상태를 가져오는 훅
-  const counts = useSelector((state) => state.count);
+  const count = useSelector((state) => state.count.count);
 
   return (
     <StyledDiv>
-      <h1>Count : {counts} </h1>
+      <h1>Count : {count} </h1>
       <button onClick={() => dispatch(increase())}>+</button>
 
       <button onClick={() => dispatch(decrease())}>-</button>

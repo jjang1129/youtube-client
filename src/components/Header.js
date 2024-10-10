@@ -9,7 +9,6 @@ import { useTheme } from "../contexts/ThemeContext";
 import { GoSun } from "react-icons/go";
 import { MdDarkMode } from "react-icons/md";
 import logoDark from "../assets/logo-dark.svg";
-import { jwtDecode } from "jwt-decode";
 
 const StyledHeader = styled.header`
   position: fixed;
@@ -99,17 +98,6 @@ const Header = ({ onUpload, onSearch }) => {
   const { theme, toggleTheme } = useTheme();
 
   const [decoded, setDecoed] = useState(null);
-
-  useEffect(() => {
-    if (token != null) {
-      setDecoed(jwtDecode(token));
-      console.log(token);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (decoded != null) localStorage.setItem("id", decoded.id);
-  }, [decoded]);
 
   const [isOpen, setIsOpen] = useState(false);
   const [keyword, setKeyword] = useState("");

@@ -27,6 +27,5 @@ export const remove = async (subCode) => {
 };
 
 export const getSub = async (channelCode) => {
-  console.log("getSub 까지온다");
   return await authorize.get(`sub/${channelCode}`);
 };

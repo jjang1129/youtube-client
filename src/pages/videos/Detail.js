@@ -8,66 +8,80 @@ import {
   fetchVideos,
 } from "../../reducers/videoReducer";
 import { addsub, count, findSub, getsub, remove } from "../../api/Subscribe";
+// 액션함수들 임포트
+import { useDispatch, useSelector } from "react-redux";
+import { createComment, fetchComments } from "../../store/commentSlice";
 import {
-  initState as subscribeState,
   subscribe,
   unsubscribe,
   subCount,
-  subscribeReducer,
   fetchSub,
-} from "../../reducers/subscribeReducer";
+} from "../../store/subscribeSlice";
 import { useAuth } from "../../contexts/AuthContext";
 
 const Detail = () => {
-  // const { token } = useAuth();
+  const { token, id } = useAuth();
   const { videoCode } = useParams();
 
-  const [state, dispatch] = useReducer(videoReducer, videoState); // 별칭사용
+  const [isComment, setIsComment] = useState(false);
+  const [newComment, setNewComment] = useState({
+    commentText: "",
+    videoCode: videoCode,
+    id: id,
+  });
 
-  const [subState, subDispatch] = useReducer(subscribeReducer, subscribeState);
+  // 리듀서 방식 - 리덕스 툴킷으로 변경해봐도 괜찮아요
+  // 실제 프로젝트에서는 하나로 통일해주세요
+  const [state, videoDispatch] = useReducer(videoReducer, videoState); // 별칭사용
+  const { video, videos } = state;
+  // 리덕스 툴킷 방식 - 구독
+  const dispatch = useDispatch();
 
   // 3. useReducer(리듀서 함수 , 초기상태 ) 훅을 사용하여 상태(state)와 디스패치(dispatch)를 관리
   // -dispatch : 액션을 리듀서로 보내는 함수로 , 액션 객체를 인자로 받는다
 
-  // 구조분해 할당
-  const { video, videos } = state;
-  const { isSub, count, sub } = subState;
-  const [token, setToken] = useState();
+  const isSub = useSelector((state) => state.subscribe.isSub);
+  const count = useSelector((state) => state.subscribe.count);
+  const sub = useSelector((state) => state.subscribe.sub);
+  const comments = useSelector((state) => state.comment.comments);
 
   // 비디오 상세보기 + 오른쪽에 추천 비디오 리시트 띄우는거
   // 페이지 로드시 바로 나오는 기능임
   useEffect(() => {
-    fetchVideo(dispatch, videoCode);
-    fetchVideos(dispatch, 1, "");
-    setToken(localStorage.getItem("token"));
+    fetchVideo(videoDispatch, videoCode);
+    fetchVideos(videoDispatch, 1, "");
+    dispatch(fetchComments(videoCode));
   }, []);
+
+  const handleSub = async () => {
+    if (isSub) {
+      //구독중 -> 구독 취소
+      dispatch(unsubscribe(sub.subCode));
+    } else {
+      //구독 -> 구독
+      dispatch(subscribe({ channelCode: video.channel.channelCode }));
+    }
+  };
 
   // 페이지 로드 -> 비디오 생성 -> 구독자수 카운트 + 구독여부 판별
   useEffect(() => {
     if (video != null) {
-      subCount(subDispatch, video.channel.channelCode);
+      dispatch(subCount(video.channel.channelCode));
 
       if (token != null) {
-        fetchSub(subDispatch, video.channel.channelCode);
+        dispatch(fetchSub(video.channel.channelCode));
       }
     }
-  }, [video]);
+  }, [video, token]);
+
+  // 댓글 추가기능
+  const addComment = async () => {
+    dispatch(createComment(newComment));
+    setIsComment(false);
+    setNewComment({ ...newComment, commentText: "" });
+  };
 
   // 구독 or 구독 취소 버튼 눌렀을때 !
-  const handbleSub = async () => {
-    if (isSub) {
-      //구독중 -> 구독 취소
-      console.log(isSub);
-      console.log("구독취소" + sub);
-      unsubscribe(subDispatch, sub.subCode);
-    } else {
-      //구독 -> 구독
-      console.log(isSub);
-      console.log("구독");
-      subscribe(subDispatch, { channelCode: video.channel.channelCode });
-      console.log(sub);
-    }
-  };
 
   /*
    const [subCount, setSubCount] = useState();
@@ -135,10 +149,42 @@ const Detail = () => {
               <p>구독자 {count} 명</p>
             </div>
 
-            <button onClick={handbleSub}>{isSub ? "구독중" : "구독"} </button>
+            <button onClick={handleSub}>{isSub ? "구독중" : "구독"} </button>
           </div>
         </div>
         <div className="video-detail-info">{video?.videoDesc}</div>
+        <div className="comment">
+          <input
+            className="comment-add"
+            type="text"
+            placeholder="댓글추가.."
+            value={newComment.commentText}
+            onChange={(e) =>
+              setNewComment({ ...newComment, commentText: e.target.value })
+            }
+            onClick={() => setIsComment(true)}
+          />
+          {isComment && (
+            <div className="comment-add-status">
+              <button onClick={() => setIsComment(false)}>취소</button>
+              <button onClick={addComment}>댓글</button>
+            </div>
+          )}
+          <div className="comment-list">
+            {comments.map((comment) => (
+              <div className="comment-content">
+                <h4>{comment.id}</h4>
+                <p>{comment.commentText}</p>
+                <button>답글</button>
+                <input type="text" placeholder="답글추가.." />
+                <div className="reply-add-status">
+                  <button>취소</button>
+                  <button>답글</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="video-list">
